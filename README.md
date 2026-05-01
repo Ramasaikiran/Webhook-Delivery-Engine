@@ -43,7 +43,7 @@ webhook-engine/
 
 **Storage:** SQLite (via `better-sqlite3`). In-memory is not used so data survives restarts.
 
-**No queue libraries** — retry scheduling is implemented directly using a poll loop + `setTimeout`.
+**No queue libraries** - retry scheduling is implemented directly using a poll loop + `setTimeout`.
 
 ---
 
