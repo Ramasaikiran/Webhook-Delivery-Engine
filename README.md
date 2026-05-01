@@ -1,4 +1,4 @@
-# ⚡ WebhookForge — Webhook Delivery Engine
+#  WebhookForge - Webhook Delivery Engine
 
 > **Nestack SDE Assessment Submission**
 
@@ -60,7 +60,7 @@ cd webhook-engine
 npm install
 ```
 
-### Environment Variables (optional — defaults work for local dev)
+### Environment Variables (optional - defaults work for local dev)
 
 ```env
 PORT=3000
@@ -231,7 +231,7 @@ Because we use SQLite (a file-based DB), all event state persists across restart
 
 ## Deployment
 
-### Railway (recommended — supports persistent SQLite)
+### Railway (recommended - supports persistent SQLite)
 
 ```bash
 # Install Railway CLI
@@ -242,8 +242,8 @@ railway up
 ```
 
 Set env vars in the Railway dashboard:
-- `WEBHOOK_SIGNING_KEY` — a strong random secret
-- `JWT_SECRET` — a strong random secret
+- `WEBHOOK_SIGNING_KEY` - a strong random secret
+- `JWT_SECRET` - a strong random secret
 - `NODE_ENV=production`
 
 ### Render
