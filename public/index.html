@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebhookForge — Nestack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --surface: #111114;
+    --border: #1e1e24;
+    --border-bright: #2e2e38;
+    --accent: #00ff88;
+    --accent-dim: #00ff8820;
+    --accent-mid: #00ff8860;
+    --red: #ff3366;
+    --red-dim: #ff336620;
+    --yellow: #ffb800;
+    --yellow-dim: #ffb80020;
+    --blue: #3b82f6;
+    --blue-dim: #3b82f620;
+    --muted: #3d3d4a;
+    --text: #e8e8f0;
+    --text-dim: #666674;
+    --text-mid: #9999aa;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* AUTH SCREEN */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 60% 40%, #001a0d 0%, var(--bg) 70%);
+    position: relative;
+  }
+
+  #auth-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .auth-box {
+    position: relative;
+    width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    padding: 40px;
+    box-shadow: 0 0 80px #00ff8810, 0 0 0 1px var(--border);
+  }
+
+  .auth-logo {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+
+  .auth-subtitle {
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 36px;
+  }
+
+  .tab-row {
+    display: flex;
+    border-bottom: 1px solid var(--border-bright);
+    margin-bottom: 28px;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-mid);
+    margin-bottom: 6px;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .field input:focus {
+    border-color: var(--accent-mid);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  .field input.error {
+    border-color: var(--red);
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 13px;
+    border: none;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+
+  .btn-primary:hover { background: #00cc6a; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .error-msg {
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    color: var(--red);
+    padding: 10px 14px;
+    font-size: 12px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  .error-msg.show { display: block; }
+
+  .demo-hint {
+    margin-top: 20px;
+    padding: 12px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-mid);
+    font-size: 11px;
+    color: var(--text-mid);
+    line-height: 1.8;
+  }
+
+  .demo-hint span { color: var(--accent); }
+
+  /* APP SHELL */
+  #app-screen { display: none; }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-bright);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 52px;
+  }
+
+  .topbar-logo {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  .btn-logout {
+    background: none;
+    border: 1px solid var(--muted);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+  .main-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    height: calc(100vh - 52px);
+  }
+
+  /* LEFT PANEL */
+  .left-panel {
+    border-right: 1px solid var(--border-bright);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-title {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-mid);
+  }
+
+  .count-badge {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-mid);
+    color: var(--accent);
+    font-size: 10px;
+    padding: 2px 8px;
+    letter-spacing: 1px;
+  }
+
+  .filter-row {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .filter-btn {
+    flex: 1;
+    padding: 8px 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: none;
+    border: none;
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--text-dim);
+    transition: all 0.15s;
+  }
+
+  .filter-btn:last-child { border-right: none; }
+  .filter-btn:hover { background: var(--border); color: var(--text); }
+  .filter-btn.active { background: var(--accent-dim); color: var(--accent); }
+
+  .events-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .events-list::-webkit-scrollbar { width: 4px; }
+  .events-list::-webkit-scrollbar-track { background: var(--bg); }
+  .events-list::-webkit-scrollbar-thumb { background: var(--muted); }
+
+  .event-item {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+
+  .event-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: transparent;
+    transition: background 0.15s;
+  }
+
+  .event-item:hover { background: var(--border); }
+  .event-item.selected { background: #0d1a12; }
+  .event-item.selected::before { background: var(--accent); }
+
+  .event-type {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    font-family: var(--mono);
+  }
+
+  .event-id {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    font-family: var(--mono);
+  }
+
+  .event-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .status-pill {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 2px 8px;
+    border: 1px solid;
+  }
+
+  .status-pending { color: var(--yellow); border-color: var(--yellow); background: var(--yellow-dim); }
+  .status-delivered { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+  .status-failed { color: var(--red); border-color: var(--red); background: var(--red-dim); }
+  .status-dead { color: var(--muted); border-color: var(--muted); background: transparent; }
+
+  .event-time {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--text-dim);
+    font-size: 12px;
+    gap: 8px;
+  }
+
+  .empty-icon { font-size: 28px; opacity: 0.3; }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .right-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-bright);
+  }
+
+  .rtab {
+    padding: 14px 24px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    color: var(--text-dim);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    margin-bottom: -1px;
+  }
+
+  .rtab:hover { color: var(--text); }
+  .rtab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .right-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  .right-content::-webkit-scrollbar { width: 4px; }
+  .right-content::-webkit-scrollbar-track { background: var(--bg); }
+  .right-content::-webkit-scrollbar-thumb { background: var(--muted); }
+
+  /* DETAIL VIEW */
+  .detail-section { margin-bottom: 28px; }
+
+  .detail-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+
+  .kv-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 8px 16px;
+    font-size: 12px;
+  }
+
+  .kv-key { color: var(--text-dim); }
+  .kv-val { color: var(--text); word-break: break-all; }
+  .kv-val.mono { font-family: var(--mono); }
+
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    padding: 16px;
+    font-size: 12px;
+    color: var(--accent);
+    white-space: pre;
+    overflow-x: auto;
+    line-height: 1.8;
+  }
+
+  .attempt-row {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+    align-items: start;
+    font-size: 12px;
+  }
+
+  .attempt-num {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .attempt-time { color: var(--text-mid); }
+
+  .attempt-status {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border: 1px solid;
+  }
+
+  .attempt-success { color: var(--accent); border-color: var(--accent); }
+  .attempt-failed { color: var(--red); border-color: var(--red); }
+
+  .http-code {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-mid);
+    text-align: right;
+  }
+
+  .no-selection {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    gap: 12px;
+  }
+
+  .no-selection-icon { font-size: 40px; opacity: 0.2; }
+
+  /* CREATE FORM */
+  .create-form { max-width: 560px; }
+
+  .form-field {
+    margin-bottom: 20px;
+  }
+
+  .form-field label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-mid);
+    margin-bottom: 8px;
+  }
+
+  .form-field input,
+  .form-field textarea,
+  .form-field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: vertical;
+  }
+
+  .form-field input:focus,
+  .form-field textarea:focus,
+  .form-field select:focus {
+    border-color: var(--accent-mid);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  .form-field select option { background: var(--surface); }
+
+  .form-field textarea { min-height: 120px; }
+
+  .btn-create {
+    background: var(--accent);
+    color: #000;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 12px 32px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-create:hover { background: #00cc6a; }
+  .btn-create:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-retry {
+    background: none;
+    border: 1px solid var(--yellow);
+    color: var(--yellow);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-retry:hover { background: var(--yellow-dim); }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    padding: 14px 20px;
+    font-size: 12px;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.3s;
+    pointer-events: none;
+    box-shadow: 0 0 40px #00000060;
+    max-width: 320px;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { border-color: var(--accent); color: var(--accent); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  .refresh-btn {
+    background: none;
+    border: 1px solid var(--border-bright);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .refresh-btn:hover { border-color: var(--accent-mid); color: var(--accent); }
+
+  .spinner {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border: 2px solid var(--muted);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-right: 6px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hmac-block {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    padding: 20px;
+    font-size: 11px;
+    line-height: 2;
+  }
+
+  .hmac-block .hl { color: var(--accent); }
+  .hmac-block .comment { color: var(--text-dim); }
+
+  .section-header {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">⚡ WebhookForge</div>
+    <div class="auth-subtitle">Nestack Delivery Engine</div>
+
+    <div class="tab-row">
+      <div class="tab active" onclick="switchTab('login')">Login</div>
+      <div class="tab" onclick="switchTab('register')">Register</div>
+    </div>
+
+    <div id="login-form">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="error-msg" id="login-error"></div>
+      <button class="btn-primary" onclick="doLogin()">Login</button>
+      <div class="demo-hint">
+        Demo account — <span>demo@nestack.com</span> / <span>demo1234</span>
+      </div>
+    </div>
+
+    <div id="register-form" style="display:none">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Min 6 characters" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>Confirm Password</label>
+        <input type="password" id="reg-confirm" placeholder="Repeat password" autocomplete="new-password">
+      </div>
+      <div class="error-msg" id="reg-error"></div>
+      <button class="btn-primary" onclick="doRegister()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-logo">⚡ WebhookForge</div>
+    <div class="topbar-user">
+      <span id="user-email-display"></span>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- LEFT: Events list -->
+    <div class="left-panel">
+      <div class="panel-header">
+        <span class="panel-title">Events</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="count-badge" id="total-count">0</span>
+          <button class="refresh-btn" onclick="loadEvents()">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="setFilter(null, this)">All</button>
+        <button class="filter-btn" onclick="setFilter('pending', this)">Pending</button>
+        <button class="filter-btn" onclick="setFilter('delivered', this)">Done</button>
+        <button class="filter-btn" onclick="setFilter('failed', this)">Failed</button>
+        <button class="filter-btn" onclick="setFilter('dead', this)">Dead</button>
+      </div>
+      <div class="events-list" id="events-list">
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <div>No events yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Detail/Create/Docs -->
+    <div class="right-panel">
+      <div class="right-tabs">
+        <div class="rtab active" onclick="setRTab('detail', this)">Event Detail</div>
+        <div class="rtab" onclick="setRTab('create', this)">Send Event</div>
+        <div class="rtab" onclick="setRTab('docs', this)">HMAC Docs</div>
+      </div>
+
+      <div class="right-content">
+        <!-- Detail -->
+        <div id="rtab-detail">
+          <div class="no-selection" id="no-selection">
+            <div class="no-selection-icon">🔍</div>
+            <div>Select an event to inspect</div>
+          </div>
+          <div id="event-detail" style="display:none"></div>
+        </div>
+
+        <!-- Create -->
+        <div id="rtab-create" style="display:none">
+          <div class="section-header">Send Webhook Event</div>
+          <div class="create-form">
+            <div class="form-field">
+              <label>Event Type</label>
+              <input type="text" id="ev-type" placeholder="e.g. payment.failed, user.signup">
+            </div>
+            <div class="form-field">
+              <label>Webhook URL</label>
+              <input type="url" id="ev-url" placeholder="https://your-endpoint.com/webhook">
+            </div>
+            <div class="form-field">
+              <label>Payload (JSON)</label>
+              <textarea id="ev-payload" placeholder='{ "amount": 99.99, "currency": "USD" }'></textarea>
+            </div>
+            <div class="error-msg" id="create-error"></div>
+            <button class="btn-create" onclick="createEvent()">Send Event →</button>
+          </div>
+        </div>
+
+        <!-- Docs -->
+        <div id="rtab-docs" style="display:none">
+          <div class="section-header">HMAC Signature Verification</div>
+          <div class="detail-section">
+            <div class="detail-label">Signing Method</div>
+            <div class="hmac-block">
+              <span class="comment"># Every outgoing POST includes:</span><br>
+              <span class="hl">X-Webhook-Signature: sha256={HMAC_HEX}</span><br><br>
+              <span class="comment"># Signed over the raw JSON body string using HMAC-SHA256</span><br>
+              <span class="comment"># Signing key: defined in WEBHOOK_SIGNING_KEY env var</span><br>
+              <span class="comment"># Default key (dev only): nestack-webhook-secret-key-2024</span>
+            </div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-label">Verify in Node.js</div>
+            <div class="code-block">const crypto = require('crypto');
+
+function verifyWebhook(rawBody, signature) {
+  const key = process.env.WEBHOOK_SIGNING_KEY;
+  // Strip 'sha256=' prefix
+  const hex = signature.replace('sha256=', '');
+  const expected = crypto
+    .createHmac('sha256', key)
+    .update(rawBody)          // rawBody = Buffer or string
+    .digest('hex');
+  return crypto.timingSafeEqual(
+    Buffer.from(hex, 'hex'),
+    Buffer.from(expected, 'hex')
+  );
+}
+
+// Express usage:
+app.post('/webhook', express.raw({ type: '*/*' }), (req, res) => {
+  const sig = req.headers['x-webhook-signature'];
+  if (!verifyWebhook(req.body, sig)) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  // Process event...
+  res.sendStatus(200);
+});</div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-label">Verify in Python</div>
+            <div class="code-block">import hmac, hashlib
+
+def verify_webhook(raw_body: bytes, signature: str, key: str) -> bool:
+    hex_sig = signature.removeprefix("sha256=")
+    expected = hmac.new(
+        key.encode(), raw_body, hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(hex_sig, expected)</div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-label">Retry Schedule</div>
+            <div class="hmac-block">
+              <span class="comment"># Attempt order for each event:</span><br>
+              <span class="hl">Attempt 1</span> — immediate on ingestion<br>
+              <span class="hl">Attempt 2</span> — +30 seconds after failure<br>
+              <span class="hl">Attempt 3</span> — +5 minutes after failure<br>
+              <span class="hl">Attempt 4</span> — +30 minutes after failure<br>
+              <span class="comment"># After 4 total attempts → status: dead</span><br>
+              <span class="comment"># Poll interval: every 5 seconds</span><br><br>
+              <span class="comment"># Server restart: in-flight events (next_attempt_at = sentinel)</span><br>
+              <span class="comment"># are recovered on startup and scheduled for +30s retry</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let token = localStorage.getItem('wf_token') || null;
+  let userEmail = localStorage.getItem('wf_email') || null;
+  let currentFilter = null;
+  let selectedEventId = null;
+  let autoRefreshTimer = null;
+
+  // ── Auth ──────────────────────────────────────────────
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('login-form').style.display = tab === 'login' ? '' : 'none';
+    document.getElementById('register-form').style.display = tab === 'register' ? '' : 'none';
+  }
+
+  async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errEl = document.getElementById('login-error');
+
+    if (!email || !password) { showErr(errEl, 'Please fill in all fields'); return; }
+    errEl.classList.remove('show');
+
+    try {
+      const res = await apiFetch('/auth/login', 'POST', { email, password }, false);
+      if (res.error) { showErr(errEl, res.error); return; }
+      setSession(res.token, res.email);
+    } catch (e) {
+      showErr(errEl, 'Network error. Is the server running?');
+    }
+  }
+
+  async function doRegister() {
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const confirm = document.getElementById('reg-confirm').value;
+    const errEl = document.getElementById('reg-error');
+
+    if (!email || !password || !confirm) { showErr(errEl, 'Please fill in all fields'); return; }
+    if (password !== confirm) { showErr(errEl, 'Passwords do not match'); return; }
+    if (password.length < 6) { showErr(errEl, 'Password must be at least 6 characters'); return; }
+    errEl.classList.remove('show');
+
+    try {
+      const res = await apiFetch('/auth/register', 'POST', { email, password }, false);
+      if (res.error) { showErr(errEl, res.error); return; }
+      setSession(res.token, res.email);
+    } catch (e) {
+      showErr(errEl, 'Network error. Is the server running?');
+    }
+  }
+
+  function setSession(t, email) {
+    token = t;
+    userEmail = email;
+    localStorage.setItem('wf_token', t);
+    localStorage.setItem('wf_email', email);
+    document.getElementById('user-email-display').textContent = email;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    loadEvents();
+    startAutoRefresh();
+  }
+
+  function doLogout() {
+    token = null;
+    userEmail = null;
+    localStorage.removeItem('wf_token');
+    localStorage.removeItem('wf_email');
+    clearInterval(autoRefreshTimer);
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+  }
+
+  // ── API helper ────────────────────────────────────────
+  async function apiFetch(path, method = 'GET', body = null, auth = true) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (auth && token) headers['Authorization'] = `Bearer ${token}`;
+    const opts = { method, headers };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(path, opts);
+    const data = await res.json();
+    if (res.status === 401 && auth) doLogout();
+    return data;
+  }
+
+  // ── Events ────────────────────────────────────────────
+  async function loadEvents() {
+    const url = currentFilter ? `/events?status=${currentFilter}` : '/events';
+    const data = await apiFetch(url);
+    if (!Array.isArray(data)) return;
+
+    document.getElementById('total-count').textContent = data.length;
+    const list = document.getElementById('events-list');
+
+    if (data.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div>No events</div></div>`;
+      return;
+    }
+
+    list.innerHTML = data.map(ev => `
+      <div class="event-item ${selectedEventId === ev.id ? 'selected' : ''}" onclick="selectEvent('${ev.id}')">
+        <div class="event-type">${escHtml(ev.type)}</div>
+        <div class="event-id">${ev.id.slice(0,8)}…</div>
+        <div class="event-meta">
+          <span class="status-pill status-${ev.status}">${ev.status}</span>
+          <span class="event-time">${timeAgo(ev.created_at)}</span>
+        </div>
+      </div>
+    `).join('');
+
+    if (selectedEventId) loadEventDetail(selectedEventId);
+  }
+
+  async function selectEvent(id) {
+    selectedEventId = id;
+    document.querySelectorAll('.event-item').forEach(el => el.classList.remove('selected'));
+    const el = [...document.querySelectorAll('.event-item')].find(el => el.onclick.toString().includes(id));
+    if (el) el.classList.add('selected');
+    setRTab('detail', document.querySelector('.rtab'));
+    await loadEventDetail(id);
+  }
+
+  async function loadEventDetail(id) {
+    const ev = await apiFetch(`/events/${id}`);
+    if (ev.error) return;
+
+    document.getElementById('no-selection').style.display = 'none';
+    const det = document.getElementById('event-detail');
+    det.style.display = 'block';
+
+    const retryBtn = ev.status === 'dead'
+      ? `<button class="btn-retry" onclick="retryEvent('${ev.id}')">↺ Retry Dead Event</button>`
+      : '';
+
+    const attemptsHtml = ev.attempts.length === 0
+      ? `<div style="color:var(--text-dim);font-size:12px">No attempts yet — delivery pending...</div>`
+      : ev.attempts.map((a, i) => `
+        <div class="attempt-row">
+          <div>
+            <div class="attempt-num">Attempt ${i + 1}</div>
+            <div class="attempt-time">${fmt(a.attempted_at)}</div>
+            ${a.error_message ? `<div style="color:var(--red);font-size:11px;margin-top:4px">${escHtml(a.error_message)}</div>` : ''}
+          </div>
+          <span class="attempt-status attempt-${a.outcome}">${a.outcome}</span>
+          <div class="http-code">${a.http_status ?? '—'}</div>
+        </div>
+      `).join('');
+
+    det.innerHTML = `
+      <div class="detail-section">
+        <div class="detail-label">Event Info</div>
+        <div class="kv-grid">
+          <span class="kv-key">ID</span><span class="kv-val">${ev.id}</span>
+          <span class="kv-key">Type</span><span class="kv-val mono">${escHtml(ev.type)}</span>
+          <span class="kv-key">Status</span><span class="kv-val"><span class="status-pill status-${ev.status}">${ev.status}</span></span>
+          <span class="kv-key">Created</span><span class="kv-val">${fmt(ev.created_at)}</span>
+          <span class="kv-key">Attempts</span><span class="kv-val">${ev.attempt_count}</span>
+          ${ev.next_attempt_at ? `<span class="kv-key">Next Retry</span><span class="kv-val">${fmt(ev.next_attempt_at)}</span>` : ''}
+          <span class="kv-key">Webhook URL</span><span class="kv-val" style="word-break:break-all">${escHtml(ev.webhook_url)}</span>
+        </div>
+        ${retryBtn}
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">Payload</div>
+        <div class="code-block">${escHtml(JSON.stringify(ev.payload, null, 2))}</div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">Delivery Attempts (${ev.attempts.length})</div>
+        ${attemptsHtml}
+      </div>
+    `;
+  }
+
+  async function retryEvent(id) {
+    const res = await apiFetch(`/events/${id}/retry`, 'POST');
+    if (res.error) { showToast(res.error, 'error'); return; }
+    showToast('Event re-queued for delivery', 'success');
+    await loadEvents();
+    await loadEventDetail(id);
+  }
+
+  async function createEvent() {
+    const type = document.getElementById('ev-type').value.trim();
+    const url = document.getElementById('ev-url').value.trim();
+    const payloadStr = document.getElementById('ev-payload').value.trim();
+    const errEl = document.getElementById('create-error');
+
+    if (!type || !url) { showErr(errEl, 'Type and Webhook URL are required'); return; }
+
+    let payload = {};
+    if (payloadStr) {
+      try { payload = JSON.parse(payloadStr); } catch { showErr(errEl, 'Payload must be valid JSON'); return; }
+    }
+
+    errEl.classList.remove('show');
+
+    const res = await apiFetch('/events', 'POST', { type, payload, webhook_url: url });
+    if (res.error) { showErr(errEl, res.error); return; }
+
+    showToast('Event created and queued for delivery!', 'success');
+    document.getElementById('ev-type').value = '';
+    document.getElementById('ev-url').value = '';
+    document.getElementById('ev-payload').value = '';
+    await loadEvents();
+    selectedEventId = res.id;
+    setRTab('detail', document.querySelector('.rtab'));
+    await loadEventDetail(res.id);
+  }
+
+  function setFilter(status, btn) {
+    currentFilter = status;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadEvents();
+  }
+
+  function setRTab(tab, _) {
+    document.querySelectorAll('.rtab').forEach((el, i) => {
+      const tabs = ['detail', 'create', 'docs'];
+      el.classList.toggle('active', tabs[i] === tab);
+    });
+    document.getElementById('rtab-detail').style.display = tab === 'detail' ? '' : 'none';
+    document.getElementById('rtab-create').style.display = tab === 'create' ? '' : 'none';
+    document.getElementById('rtab-docs').style.display = tab === 'docs' ? '' : 'none';
+  }
+
+  // ── Utils ─────────────────────────────────────────────
+  function showErr(el, msg) {
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast show ${type}`;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function timeAgo(dateStr) {
+    const diff = Date.now() - new Date(dateStr + (dateStr.endsWith('Z') ? '' : 'Z')).getTime();
+    const s = Math.floor(diff / 1000);
+    if (s < 60) return `${s}s ago`;
+    if (s < 3600) return `${Math.floor(s/60)}m ago`;
+    if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+    return `${Math.floor(s/86400)}d ago`;
+  }
+
+  function fmt(dateStr) {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr + (dateStr.endsWith('Z') ? '' : 'Z'));
+      return d.toLocaleString();
+    } catch { return dateStr; }
+  }
+
+  function startAutoRefresh() {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(loadEvents, 8000);
+  }
+
+  // ── Init ──────────────────────────────────────────────
+  if (token) {
+    // Try to restore session
+    apiFetch('/events?limit=1').then(res => {
+      if (Array.isArray(res)) {
+        setSession(token, userEmail || '');
+      } else {
+        doLogout();
+      }
+    }).catch(doLogout);
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (document.getElementById('login-form').style.display !== 'none') doLogin();
+      if (document.getElementById('register-form').style.display !== 'none') doRegister();
+    }
+  });
+</script>
+</body>
+</html>
